@@ -131,11 +131,9 @@ namespace ConsoleWriter {
 	void handle_command_result(std::string const& result);
 
 	void add_default_commands();
-	void save_message(Message const& msg) noexcept;
+	void save_message(Message && msg) noexcept;
     private:
-	enum {
-	    MAX_MSG_BUFFER = 100
-	};
+	static constexpr size_t MAX_MSG_BUFFER { 100 };
 	
 	std::queue<Message> _message_queue;
 	std::mutex _msg_lock;

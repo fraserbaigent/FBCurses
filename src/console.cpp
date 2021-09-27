@@ -1,5 +1,4 @@
 #include "console.hpp"
-#include "../settings/app_settings.hpp"
 
 #include <ctime>
 #include <chrono>
@@ -22,7 +21,7 @@ ConsoleWriter::timestamped_message
     msg.add_chunk(timestamp(true), ConsoleInterface::Message::TIMESTAMP);
     msg.add_chunk(message, ConsoleInterface::Message::NORMAL);
 #if DEBUG
-    for (const auto& st : msg._strs) {
+    for (auto const& st : msg._strs) {
 	std::cout << st;
     };
     std::cout<< "\n";
@@ -40,7 +39,7 @@ ConsoleWriter::error_message
     msg.add_chunk(message, ConsoleInterface::Message::NORMAL);
 #if DEBUG
     auto &s = msg._strs;
-    for (const auto& st : s) {
+    for (auto const& st : s) {
 	std::cout << st;
     };
     std::cout<< "\n";
@@ -114,7 +113,7 @@ ConsoleWriter::ConsoleInterface::create() {
 };
 
 ConsoleWriter::ConsoleInterface::ConsoleInterface() 
-    : ThreadedProcess(AppSettings::ReservedIDs::CONSOLE)
+    : ThreadedProcess(0)
     , _current_index(0) {
     initscr();
     curs_set(0);
@@ -419,7 +418,7 @@ ConsoleWriter::ConsoleInterface::add_default_commands
 	ss << "Commands: ";
 	std::scoped_lock<std::mutex> lock(_commands_lock);
 	size_t i = 1;
-	for (const auto& cmd:_commands) {
+	for (auto const& cmd:_commands) {
 	    ss << cmd.first;
 	    if (i++ != _commands.size()) {
 		ss << ", ";
@@ -457,25 +456,12 @@ ConsoleWriter::ConsoleInterface::add_default_commands
 	 std::move(help));
     add_command("help",
 		help_command);    
-
-    // testing
-    auto test = [&] (std::string const&) {
-	std::stringstream ss;
-	ss << "There are " <<
-	    _sent_messages.size() <<
-	    " in the sent messages list.";
-	return ss.str();
-    };
-    auto test_cmd = std::make_shared<Command>
-	("Test cmd",
-	 std::move(test));
-    add_command("test", test_cmd);
 };
 
 void
 ConsoleWriter::ConsoleInterface::save_message
-(Message const& output) noexcept {
-    _sent_messages.emplace_back(output);
+(Message && output) noexcept {
+    _sent_messages.emplace_back(std::move(output));
     if (_sent_messages.size() > MAX_MSG_BUFFER) {
 	_sent_messages.erase(_sent_messages.begin());
     };
