@@ -52,7 +52,7 @@ namespace ConsoleWriter {
     void shutdown();
     void end_console_loop();
 	
-    class ConsoleInterface :
+    class ConsoleInterface final :
 	public ThreadedProcess {
     public:
 	class Message {
@@ -67,23 +67,16 @@ namespace ConsoleWriter {
 	    };
 
 	    Message() = default;
-	    void send_message(int const row,int const column) const;
-	    void add_chunk(std::string const&msg, int const colour);
+	    void send_message(int const row, int const column) const;
+	    void add_chunk(std::string msg, int const colour);
 	    std::vector<int> _colour_pairs;
 	    std::vector<std::string> _strs;
 	};
     public:
-	static std::shared_ptr<ConsoleInterface> create();
+	static std::shared_ptr<ConsoleWriter::ConsoleInterface> create();
+
 	ConsoleInterface();
 	~ConsoleInterface();
-	
-	ConsoleInterface(ConsoleInterface const& other) noexcept = delete;
-	ConsoleInterface& operator=
-	(ConsoleInterface const& other) noexcept = delete;
-	ConsoleInterface(ConsoleInterface&& other) noexcept = delete;
-	ConsoleInterface& operator=
-	(ConsoleInterface&& other) noexcept = delete;
-
 
 	// PURE VIRTUAL FUNCTIONS
 	std::string process_name() const noexcept override { return "Console"; }
@@ -101,7 +94,7 @@ namespace ConsoleWriter {
 			 std::shared_ptr<const Command> const& command);
     private:
 	static const std::string _acceptable_characters;
-	void print_line(int line, Message const& output,
+	void print_line(int line, Message output,
 			const bool save_msg = true);
 	void send_next_message() noexcept;
 	std::string current_buffer_string() noexcept;

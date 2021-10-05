@@ -44,7 +44,7 @@ ConsoleWriter::error_message
     };
     std::cout<< "\n";
 #else
-    _console->add_message(std::move(msg));.
+    _console->add_message(std::move(msg));
 #endif
 };
 
@@ -104,7 +104,7 @@ ConsoleWriter::add_command
 
 std::shared_ptr<ConsoleWriter::ConsoleInterface>
 ConsoleWriter::ConsoleInterface::create() {
-    ConsoleWriter::_console = std::make_shared<ConsoleInterface>();.
+    ConsoleWriter::_console = std::make_shared<ConsoleInterface>();
     _console->_user_entry_thread =
 	std::make_unique<std::thread>(std::bind
 				      (&ConsoleInterface::run_user_input,
@@ -176,14 +176,14 @@ void ConsoleWriter::ConsoleInterface::send_shutdown_message() noexcept {
     msg.add_chunk(timestamp(true), Message::TIMESTAMP);
     msg.add_chunk("Console shut down.", Message::NORMAL);
     std::scoped_lock<std::mutex> lock(_msg_lock);
-    print_line(_sent_messages.size(), msg);
+    print_line(_sent_messages.size(), std::move(msg));
 }
 
 void ConsoleWriter::ConsoleInterface::send_next_message() noexcept {
     if (_message_queue.empty())
 	return;
     std::scoped_lock<std::mutex> lock(_msg_lock);
-    print_line(_sent_messages.size(), _message_queue.front());
+    print_line(_sent_messages.size(), std::move(_message_queue.front()));
     _message_queue.pop();
 };
 
@@ -239,7 +239,7 @@ void ConsoleWriter::ConsoleInterface::execute_message() {
     msg.add_chunk(timestamp(true), Message::TIMESTAMP);
     msg.add_chunk(">", Message::INPUT);
     msg.add_chunk(ss.str(), Message::NORMAL);
-    print_line(_sent_messages.size(), msg);
+    print_line(_sent_messages.size(), std::move(msg));
     handle_command(ss.str());
     _input_buffer.clear();
     _current_index = 0;
@@ -281,13 +281,13 @@ void ConsoleWriter::ConsoleInterface::move_index(int const direction) {
 
 void
 ConsoleWriter::ConsoleInterface::print_line
-(int line, Message const& output, bool const save_msg) {
+(int line, Message output, bool const save_msg) {
     if (line >= LINES - 3) {
 	adjust_lines();
 	line =  LINES - 3;
     };
     if (save_msg) {
-	save_message(output);
+	save_message(std::move(output));
     };
     std::scoped_lock<std::mutex> lock(_print_lock);
     move(line, 0);
@@ -354,7 +354,7 @@ ConsoleWriter::ConsoleInterface::Message::send_message
 
 void
 ConsoleWriter::ConsoleInterface::Message::add_chunk
-(std::string const& msg, int const colour) {
+(std::string msg, int const colour) {
     _strs.emplace_back(msg);
     if (colour >= COLOURS_COUNT || colour < NORMAL) {
 	_colour_pairs.push_back(NORMAL);
